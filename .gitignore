@@ -1,0 +1,17 @@
+# ─── Python / backend ───
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/oratioai.db
+
+# ─── Node / frontend ───
+node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# ─── Editores / SO ───
+.DS_Store
+.vscode/
+.idea/

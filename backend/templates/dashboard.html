@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — OratioAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="brand">
+      <div class="brand-logo">🎤</div>
+      <div class="brand-name">OratioAI</div>
+    </div>
+    <div class="nav-links">
+      <a href="/">TREINAR</a>
+      <a href="/historico">HISTÓRICO</a>
+      <a href="/dashboard" class="active">DASHBOARD</a>
+    </div>
+  </nav>
+
+  <div class="dashboard">
+    <span class="pill"><span class="dot"></span>ANÁLISE DE IA ATIVA</span>
+    <div class="dash-header">
+      <div>
+        <h1 class="welcome-title">Dashboard de Desempenho</h1>
+        <p class="welcome-sub" id="welcome-sub">Carregando suas estatísticas…</p>
+      </div>
+      <button class="btn btn-primary" onclick="location.href='/'">▶ Novo Treino</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-icon">📈</div>
+        <div class="stat-label">Ritmo Médio</div>
+        <div class="stat-value" id="stat-ritmo">—<span class="unit">ppm</span></div>
+        <div class="stat-foot">Faixa ideal: 120–150 ppm</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-label">Clareza Média</div>
+        <div class="stat-value" id="stat-clareza">—<span class="unit">/100</span></div>
+        <div class="stat-foot" id="stat-clareza-foot">Baseado em todas as sessões</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">💬</div>
+        <div class="stat-label">Vícios de Linguagem</div>
+        <div class="stat-value" id="stat-vicios">—<span class="unit">total</span></div>
+        <div class="stat-foot" id="stat-vicios-foot">Nenhum registro ainda</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-label">Sessões Treinadas</div>
+        <div class="stat-value" id="stat-sessoes">—<span class="unit">sessões</span></div>
+        <div class="stat-foot">Total registrado no OratioAI</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <h3>Visão Geral do Desempenho</h3>
+            <div class="sub">Clareza e ritmo nos últimos 7 dias</div>
+          </div>
+          <div class="chip-static chip">Últimos 7 dias</div>
+        </div>
+        <svg id="chart-svg" viewBox="0 0 700 280" width="100%" height="280" preserveAspectRatio="none" style="display:block;">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <g stroke="rgba(255,255,255,0.05)">
+            <line x1="0" y1="60" x2="700" y2="60"/>
+            <line x1="0" y1="120" x2="700" y2="120"/>
+            <line x1="0" y1="180" x2="700" y2="180"/>
+            <line x1="0" y1="240" x2="700" y2="240"/>
+          </g>
+          <g id="chart-paths"></g>
+          <g id="chart-labels" fill="#5a6378" font-size="11" font-family="Inter"></g>
+        </svg>
+        <div class="legend">
+          <span><i style="background:#22d3ee"></i> Clareza</span>
+          <span><i style="background:#3b82f6"></i> Ritmo (ppm)</span>
+        </div>
+      </div>
+
+      <div class="sessions">
+        <div class="sessions-head"><h3>Sessões Recentes</h3><a href="/historico">Ver todas</a></div>
+        <div id="sessions-list"></div>
+        <button class="btn btn-block btn-ghost" style="margin-top: 12px;" onclick="location.href='/'">🎙 Novo Treino Rápido</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">OratioAI · Lucas Drescher &amp; Miguel Moura · ETE Monteiro Lobato 2026</footer>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
