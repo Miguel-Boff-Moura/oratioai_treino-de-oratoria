@@ -76,6 +76,18 @@ npm run dev
 
 Acesse **http://localhost:5173** (recomendado: Google Chrome ou Microsoft Edge, para o modo de gravação por microfone funcionar). O Vite faz proxy de `/api/*` para o Flask em `:5000`, então não há problema de CORS no desenvolvimento. Detalhes em [`frontend/README.md`](frontend/README.md).
 
+### 3) Publicar (GitHub Pages / Live Server)
+
+O `index.html` da raiz é o site **compilado**, gerado pelo build. Não edite
+esse arquivo à mão: altere o código em `frontend/` e rode
+
+```bash
+cd frontend
+npm run build
+```
+
+Isso regenera `index.html` e `assets/` na raiz. Depois, faça o commit dos dois.
+
 ## Próximos passos (roadmap do TCC)
 
 1. Testes de usabilidade com alunos voluntários da ETE Monteiro Lobato (questionário estruturado de 10 perguntas).
