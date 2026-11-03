@@ -1,10 +1,9 @@
 {
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
-    },
-    "devDependencies": {
-        "vite": "^8.3.4"
-    }
+  "name": "oratioai_treino-de-oratoria",
+  "private": true,
+  "description": "OratioAI: treino de oratória com IA (protótipo front-end). O código fica em frontend/.",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend"
+  }
 }

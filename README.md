@@ -1,72 +1,63 @@
-# OratioAI — Treino de Oratória com IA
+# OratioAI: Treino de Oratória com IA
 
-Ferramenta de Inteligência Artificial voltada ao treinamento de oratória, capaz de analisar a fala (ou o texto) do usuário e fornecer feedback automático para ajudar a melhorar sua comunicação oral. Trabalho de Conclusão de Curso do Curso Técnico em Informática da ETE Monteiro Lobato (CIMOL), Taquara/RS, 2026.
+Protótipo front-end de uma ferramenta que ajuda estudantes a treinar oratória. A pessoa fala no microfone (ou cola o texto da apresentação) e recebe nota, métricas de clareza e ritmo, os vícios de linguagem destacados e dicas para melhorar.
+
+Projeto de pesquisa do Curso Técnico em Informática da ETE Monteiro Lobato (CIMOL), Taquara/RS, 2026.
 
 **Autores:** Lucas Martins Drescher e Miguel Alessandro Boff de Moura
 **Orientador:** Prof. Diego Cândido de Souza
 
-## O que este protótipo faz
+- **Site no ar:** _[colar aqui o link do Vercel]_
+- **Repositório:** https://github.com/Miguel-Boff-Moura/oratioai_treino-de-oratoria
 
-- **Duas formas de entrada:** colar o texto de uma apresentação, ou falar diretamente no microfone (a fala é transcrita em tempo real no navegador via **Web Speech API**, sem custo e sem chave de API).
-- **Análise de PLN/NLP** (backend Flask): tokenização do texto (via **NLTK**, com fallback automático em regex caso os dados do NLTK não estejam disponíveis), detecção de vícios de linguagem por frequência, cálculo de ritmo (palavras por minuto, a partir da duração real da fala) e de uma nota de clareza.
-- **Feedback automático:** dicas geradas por regras a partir das métricas calculadas (nenhuma dependência de serviço pago nesta primeira versão).
-- **Persistência:** cada sessão analisada é salva em SQLite, alimentando o **Dashboard** (ritmo médio, clareza média, vícios mais falados, gráfico de desempenho dos últimos 7 dias) e o **Histórico** completo de sessões.
+## Checklist dos critérios de avaliação
 
-## Arquitetura
+| # | Critério | Atende? | Por quê |
+|---|----------|:------:|---------|
+| 1 | **Deploy e funcionamento** | ✅ | O site é estático (Vite + React) e é publicado no Vercel a partir da pasta `frontend/`. Não depende de servidor nem banco de dados, então não tem tela em branco por falta de backend. As fontes ficam dentro do projeto (pacotes `@fontsource`), sem CDN externa. |
+| 2 | **Interatividade sem recarregamento** | ✅ | Todos os formulários (analisar texto, analisar fala, criar e editar chat) usam `onSubmit` com `event.preventDefault()`. Criar, editar e apagar chats e apagar sessões acontece na hora, sem recarregar a página. Também tem o botão "Desfazer" depois de apagar. |
+| 3 | **Persistência de dados** | ✅ | Sessões de treino, chats, contexto escolhido e o rascunho do texto ficam no `localStorage` (arquivo `src/armazenamento.js`). Depois de apertar F5 tudo continua na tela, inclusive a tela aberta (a navegação usa `#/rota` na URL). |
+| 4 | **Estabilidade do console** | ✅ | Testado com o DevTools aberto passando por todas as telas: nenhum erro em vermelho. As leituras do `localStorage` e as chamadas do microfone ficam dentro de `try/catch`, e os erros do reconhecimento de voz viram avisos na tela. |
+| 5 | **Responsividade e acessibilidade** | ✅ | Layout com Tailwind adaptado para celular (menu hambúrguer, cartões em uma coluna, sem rolagem horizontal em 375 px). Usa tags semânticas (`header`, `nav`, `main`, `footer`, `article`, `fieldset`), `label` em todos os campos, `aria-label` nos botões só com ícone, `aria-live` nos avisos, link "Pular para o conteúdo", tabela escondida com os dados do gráfico para leitores de tela e respeito ao "reduzir movimento" do sistema. |
 
-Monorepo com duas partes independentes: a **API Flask** (`backend/`) e a
-**interface React + Vite** (`frontend/`), que consome essa API.
+## Como funciona
+
+1. **Transcrição da fala:** usa a Web Speech API do navegador (`SpeechRecognition`), em português, em tempo real. Funciona no Google Chrome e no Microsoft Edge (`src/useSpeechRecognition.js`).
+2. **Análise simulada da IA:** nesta versão, nenhuma IA nem banco de dados está ligado ao projeto. O arquivo `src/simulador.js` imita o que o modelo faria: tokeniza o texto, conta vícios de linguagem ("né", "tipo", "então"...), calcula o ritmo em palavras por minuto (só na fala, com a duração real), dá uma nota de clareza e monta as dicas. Uma animação mostra as etapas da "IA" enquanto isso.
+3. **Dashboard:** cartões com ritmo médio, clareza e vícios, gráfico dos últimos 7 dias (dias sem treino aparecem como estimativa; sem nenhuma sessão, aparece um gráfico de exemplo igual ao do protótipo no Figma) e lista de sessões recentes.
+4. **Histórico de chats:** anotações com criar, editar e apagar.
+
+## Estrutura
 
 ```
 oratioai_treino-de-oratoria/
 ├── README.md
-├── .gitignore
-├── backend/                    # API Flask + PLN
-│   ├── app.py                  # rotas Flask (API JSON + páginas Jinja legadas)
-│   ├── analysis.py             # núcleo de PLN: tokenização, vícios, métricas, dicas
-│   ├── db.py                   # persistência em SQLite (sem ORM)
-│   ├── requirements.txt
-│   ├── templates/              # páginas HTML antigas (Jinja2) — ainda servidas em /
-│   └── static/css|js/          # assets das páginas antigas
-└── frontend/                   # SPA React (interface atual)
+├── vercel.json          # o Vercel instala e compila a pasta frontend/
+├── package.json         # atalhos: npm run dev / npm run build
+├── index.html, assets/  # cópia do site compilado (GitHub Pages / Live Server)
+└── frontend/
     ├── index.html
     ├── package.json
-    ├── vite.config.js          # proxy /api → http://localhost:5000 no dev
-    ├── .env.example            # VITE_API_BASE para produção
+    ├── vite.config.js
+    ├── tailwind.config.js
+    ├── public/favicon.svg
     └── src/
-        ├── OratioAI.jsx        # componente principal (todas as telas)
-        ├── api.js              # cliente HTTP da API Flask
-        ├── useSpeechRecognition.js  # hook da Web Speech API (transcrição + duração)
         ├── main.jsx
-        └── index.css
+        ├── OratioAI.jsx               # telas e navegação
+        ├── simulador.js               # análise simulada (o que a IA faria)
+        ├── armazenamento.js           # localStorage
+        ├── dados.js                   # constantes e dados do dashboard
+        ├── useSpeechRecognition.js    # transcrição da fala
+        ├── index.css                  # estilos e animações
+        └── components/
+            ├── AnaliseAnimada.jsx     # animação "IA analisando"
+            ├── GraficoDesempenho.jsx  # gráfico em SVG
+            └── PainelResultado.jsx    # resultado da análise
 ```
-
-O backend expõe a API em `/api/analisar`, `/api/sessoes` e
-`/api/dashboard/resumo` (com CORS liberado via `flask-cors`) e continua
-servindo as páginas Jinja antigas em `/`, `/dashboard` e `/historico`.
-A interface atual do TCC é a SPA em `frontend/`.
-
-### Sobre o motor de reconhecimento de voz (ASR)
-
-Esta versão usa a **Web Speech API** do navegador (gratuita, sem chave de API, funciona no Chrome e no Edge) para transcrever a fala em tempo real no frontend. A arquitetura foi organizada para permitir a troca futura pelo **Whisper da OpenAI** (mais preciso e citado no referencial teórico do TCC): bastaria substituir o envio da transcrição pronta por um envio de áudio gravado para um novo endpoint no backend (ex.: `/api/transcrever`) que chamasse a API do Whisper antes de seguir para `/api/analisar`. Nenhuma mudança seria necessária no frontend além de trocar a fonte da transcrição.
 
 ## Como rodar
 
-Pré-requisitos: **Python 3.9+** e **Node.js 18+**. Abra **dois terminais**.
-
-### 1) Backend (Flask) — porta 5000
-
-```bash
-cd backend
-pip install -r requirements.txt
-python app.py
-```
-
-Na primeira execução, o backend tenta baixar os dados de tokenização do NLTK (`punkt_tab`). Se não houver internet disponível no momento (por exemplo, durante uma apresentação offline na escola), o sistema usa automaticamente um tokenizador via regex, sem travar o funcionamento.
-
-O banco de dados SQLite (`backend/oratioai.db`) é criado automaticamente na primeira execução e não é versionado no Git (veja `.gitignore`).
-
-### 2) Frontend (React + Vite) — porta 5173
+Pré-requisito: **Node.js 18 ou mais novo**.
 
 ```bash
 cd frontend
@@ -74,23 +65,12 @@ npm install
 npm run dev
 ```
 
-Acesse **http://localhost:5173** (recomendado: Google Chrome ou Microsoft Edge, para o modo de gravação por microfone funcionar). O Vite faz proxy de `/api/*` para o Flask em `:5000`, então não há problema de CORS no desenvolvimento. Detalhes em [`frontend/README.md`](frontend/README.md).
+Abra **http://localhost:5173** no Chrome ou no Edge (para o microfone funcionar).
 
-### 3) Publicar (GitHub Pages / Live Server)
+Para gerar a versão de produção: `npm run build` (dentro de `frontend/`). O resultado vai para `frontend/dist`.
 
-O `index.html` da raiz é o site **compilado**, gerado pelo build. Não edite
-esse arquivo à mão: altere o código em `frontend/` e rode
+## Próximos passos
 
-```bash
-cd frontend
-npm run build
-```
-
-Isso regenera `index.html` e `assets/` na raiz. Depois, faça o commit dos dois.
-
-## Próximos passos (roadmap do TCC)
-
-1. Testes de usabilidade com alunos voluntários da ETE Monteiro Lobato (questionário estruturado de 10 perguntas).
-2. Avaliar a troca do motor de ASR para o Whisper (OpenAI) — precisão vs. custo por minuto de áudio.
-3. Explorar o SpaCy para análise sintática mais avançada (além da tokenização básica atual via NLTK).
-4. Refinar a interatividade do gráfico de desempenho e adicionar mais destaques visuais na transcrição.
+1. Fazer os testes com pelo menos 5 usuários reais e montar a Matriz de Feedback.
+2. Trocar a análise simulada por um modelo de IA de verdade (por exemplo, o Whisper para transcrição e bibliotecas de PLN como NLTK ou spaCy no servidor).
+3. Guardar as sessões em um banco de dados com login, para o histórico funcionar em qualquer aparelho.

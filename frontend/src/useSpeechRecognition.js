@@ -1,87 +1,108 @@
 /* ============================================================
-   useSpeechRecognition.js — Hook de reconhecimento de fala
+   useSpeechRecognition.js — Transcrição da fala
 
-   Usa a Web Speech API do navegador (SpeechRecognition), gratuita e
-   sem chave de API, para transcrever a fala em pt-BR em tempo real.
-   Mede também a duração real da fala, usada pelo backend para calcular
-   o ritmo (palavras por minuto).
+   Usa a Web Speech API do navegador (SpeechRecognition), que é gratuita e
+   não precisa de chave. Ela transcreve a fala em português em tempo real.
+   Também mede a duração real da fala, usada para calcular o ritmo.
 
-   Suporte: Chrome e Edge (desktop). Em navegadores sem suporte,
-   `supported` volta como false.
+   Funciona no Google Chrome e no Microsoft Edge. Em navegadores sem suporte
+   (Firefox, por exemplo), `supported` volta como false e o site mostra um aviso.
    ============================================================ */
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useSpeechRecognition() {
-  const SpeechRecognition =
-    typeof window !== "undefined" &&
-    (window.SpeechRecognition || window.webkitSpeechRecognition);
+function obterClasse() {
+  if (typeof window === "undefined") return null;
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
 
-  const supported = Boolean(SpeechRecognition);
+const MENSAGENS_ERRO = {
+  "not-allowed": "Permissão de microfone negada. Libere o microfone no cadeado da barra de endereço.",
+  "service-not-allowed": "O navegador bloqueou o reconhecimento de voz nesta página.",
+  "audio-capture": "Nenhum microfone foi encontrado. Conecte um microfone e tente de novo.",
+  network: "O reconhecimento de voz precisa de internet. Verifique sua conexão.",
+  "language-not-supported": "O navegador não reconhece fala em português.",
+};
+
+export function useSpeechRecognition() {
+  const Classe = obterClasse();
+  const supported = Boolean(Classe);
 
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState("");   // trechos finais acumulados
-  const [interim, setInterim] = useState("");         // trecho parcial em andamento
+  const [transcript, setTranscript] = useState(""); // trechos finais
+  const [interim, setInterim] = useState(""); // trecho ainda sendo reconhecido
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState(null);
 
   const recognitionRef = useRef(null);
-  const finalTranscriptRef = useRef("");
-  const startTimeRef = useRef(null);
-  const durationRef = useRef(0);
+  const textoAnteriorRef = useRef(""); // texto de rodadas anteriores (o navegador reinicia sozinho)
+  const textoRodadaRef = useRef(""); // texto final da rodada atual
+  const parcialRef = useRef(""); // último trecho parcial (ainda não finalizado)
+  const inicioRef = useRef(0);
+  const duracaoRef = useRef(0);
   const timerRef = useRef(null);
-  const recordingRef = useRef(false);
+  const gravandoRef = useRef(false);
 
-  // Inicializa o objeto SpeechRecognition uma única vez.
   useEffect(() => {
-    if (!supported) return;
+    if (!supported) return undefined;
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = "pt-BR";
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    const rec = new Classe();
+    rec.lang = "pt-BR";
+    rec.continuous = true;
+    rec.interimResults = true;
 
-    recognition.onresult = (evento) => {
+    rec.onresult = (evento) => {
+      // Remonta o texto da rodada inteira a cada evento. Isso evita repetir
+      // frases quando o navegador reenvia resultados já finalizados.
+      let finais = "";
       let parcial = "";
-      for (let i = evento.resultIndex; i < evento.results.length; i++) {
-        const trecho = evento.results[i][0].transcript;
-        if (evento.results[i].isFinal) {
-          finalTranscriptRef.current += trecho + " ";
-        } else {
-          parcial += trecho;
-        }
+      for (let i = 0; i < evento.results.length; i++) {
+        const trecho = evento.results[i][0].transcript.trim();
+        if (evento.results[i].isFinal) finais += trecho + " ";
+        else parcial += trecho + " ";
       }
-      setTranscript(finalTranscriptRef.current.trim());
+      textoRodadaRef.current = finais.trim();
+      parcialRef.current = parcial.trim();
+      setTranscript(`${textoAnteriorRef.current} ${textoRodadaRef.current}`.trim());
       setInterim(parcial.trim());
     };
 
-    recognition.onerror = (evento) => {
-      if (evento.error === "not-allowed" || evento.error === "service-not-allowed") {
-        setError("Permissão de microfone negada. Habilite o acesso ao microfone no navegador.");
-      } else if (evento.error === "no-speech") {
-        // silêncio — ignorado, o onend reinicia se ainda estiver gravando
-      } else {
-        setError("Erro no reconhecimento de voz: " + evento.error);
+    rec.onerror = (evento) => {
+      // "no-speech" (silêncio) e "aborted" (paramos de propósito) não são erros para o usuário.
+      if (evento.error === "no-speech" || evento.error === "aborted") return;
+      setError(MENSAGENS_ERRO[evento.error] || "Não foi possível usar o reconhecimento de voz agora.");
+      if (evento.error === "not-allowed" || evento.error === "audio-capture" || evento.error === "service-not-allowed") {
+        gravandoRef.current = false;
+        setIsRecording(false);
+        clearInterval(timerRef.current);
       }
     };
 
-    recognition.onend = () => {
-      // O navegador encerra sozinho após um tempo de silêncio; se o usuário
-      // ainda não parou, reinicia para manter a captura contínua.
-      if (recordingRef.current) {
+    rec.onend = () => {
+      // Guarda o que foi dito nesta rodada antes de começar a próxima.
+      textoAnteriorRef.current = `${textoAnteriorRef.current} ${textoRodadaRef.current}`.trim();
+      textoRodadaRef.current = "";
+      parcialRef.current = "";
+      setInterim("");
+      // O navegador encerra depois de alguns segundos de silêncio; se o
+      // usuário ainda não parou, recomeça para a gravação ser contínua.
+      if (gravandoRef.current) {
         try {
-          recognition.start();
+          rec.start();
         } catch {
-          /* já iniciado */
+          /* já estava iniciado */
         }
       }
     };
 
-    recognitionRef.current = recognition;
+    recognitionRef.current = rec;
 
     return () => {
-      recordingRef.current = false;
+      gravandoRef.current = false;
+      rec.onresult = null;
+      rec.onerror = null;
+      rec.onend = null;
       try {
-        recognition.stop();
+        rec.abort();
       } catch {
         /* ignora */
       }
@@ -91,62 +112,67 @@ export function useSpeechRecognition() {
   }, [supported]);
 
   const start = useCallback(() => {
-    if (!recognitionRef.current || recordingRef.current) return;
+    if (!recognitionRef.current || gravandoRef.current) return;
     setError(null);
     setTranscript("");
     setInterim("");
     setSeconds(0);
-    finalTranscriptRef.current = "";
-    durationRef.current = 0;
-    startTimeRef.current = Date.now();
-    recordingRef.current = true;
+    textoAnteriorRef.current = "";
+    textoRodadaRef.current = "";
+    parcialRef.current = "";
+    duracaoRef.current = 0;
+    inicioRef.current = Date.now();
+    gravandoRef.current = true;
     setIsRecording(true);
 
+    clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setSeconds((Date.now() - startTimeRef.current) / 1000);
+      setSeconds((Date.now() - inicioRef.current) / 1000);
     }, 250);
 
     try {
       recognitionRef.current.start();
     } catch {
-      /* já iniciado */
+      /* já estava iniciado */
     }
   }, []);
 
+  /** Para a gravação e devolve o texto completo (finais + parcial) e a duração. */
   const stop = useCallback(() => {
-    if (!recordingRef.current) return;
-    recordingRef.current = false;
+    if (!gravandoRef.current) {
+      return { texto: transcriptAtual(), duracao: duracaoRef.current };
+    }
+    gravandoRef.current = false;
     setIsRecording(false);
-    durationRef.current = (Date.now() - startTimeRef.current) / 1000;
-    setSeconds(durationRef.current);
+    duracaoRef.current = (Date.now() - inicioRef.current) / 1000;
+    setSeconds(duracaoRef.current);
     clearInterval(timerRef.current);
     try {
       recognitionRef.current.stop();
     } catch {
       /* ignora */
     }
+    return { texto: transcriptAtual(), duracao: duracaoRef.current };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Lê direto das refs para não depender de um estado ainda não atualizado.
+  function transcriptAtual() {
+    return `${textoAnteriorRef.current} ${textoRodadaRef.current} ${parcialRef.current}`
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   const reset = useCallback(() => {
-    finalTranscriptRef.current = "";
-    durationRef.current = 0;
+    textoAnteriorRef.current = "";
+    textoRodadaRef.current = "";
+    parcialRef.current = "";
+    duracaoRef.current = 0;
     setTranscript("");
     setInterim("");
     setSeconds(0);
     setError(null);
   }, []);
 
-  return {
-    supported,
-    isRecording,
-    transcript,
-    interim,
-    seconds,
-    // duração "congelada" ao parar; enquanto grava, usa o cronômetro corrente
-    durationSeconds: () => durationRef.current || (Date.now() - (startTimeRef.current || Date.now())) / 1000,
-    error,
-    start,
-    stop,
-    reset,
-  };
+  return { supported, isRecording, transcript, interim, seconds, error, start, stop, reset };
 }

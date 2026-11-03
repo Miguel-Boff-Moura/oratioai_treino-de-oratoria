@@ -2,17 +2,236 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  background: #0f1014;
+html {
+  background: #0b0d12;
+  color-scheme: dark;
 }
 
-/* Destaque dos vícios de linguagem dentro da transcrição marcada que o
-   backend devolve (string HTML com <mark class="vicio">...</mark>). */
-.oratio-transcript mark.vicio,
-mark.vicio {
-  background: rgba(239, 68, 68, 0.22);
-  color: #fca5a5;
-  border-radius: 4px;
-  padding: 0 3px;
+body {
+  margin: 0;
+  background: #0b0d12;
+}
+
+/* Contorno visível para quem navega pelo teclado (acessibilidade). */
+:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}
+main:focus,
+h1:focus {
+  outline: none;
+}
+
+/* ---------- Animações ---------- */
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.aparecer {
+  animation: aparecer 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes trocar-tela {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.trocar-tela {
+  animation: trocar-tela 0.35s ease-out both;
+}
+
+/* Texto "Inteligência Artificial" com gradiente que se move devagar. */
+@keyframes brilho-texto {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.texto-gradiente {
+  background: linear-gradient(90deg, #3b82f6, #2dd4bf, #3b82f6);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brilho-texto 6s ease-in-out infinite;
+}
+
+/* Luz de fundo da tela inicial. */
+@keyframes flutuar {
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(-50%, 18px) scale(1.08);
+    opacity: 0.8;
+  }
+}
+.brilho-fundo {
+  position: absolute;
+  left: 50%;
+  top: 4rem;
+  width: min(36rem, 90vw);
+  height: 20rem;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(59, 130, 246, 0.22), rgba(45, 212, 191, 0.08), transparent);
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: -1;
+  animation: flutuar 9s ease-in-out infinite;
+}
+
+/* Ondas em volta do microfone enquanto grava. */
+@keyframes onda {
+  from {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.onda-gravacao {
+  position: absolute;
+  inset: 1.5rem;
+  border-radius: 1.5rem;
+  background: rgba(248, 113, 113, 0.35);
+  animation: onda 1.6s ease-out infinite;
+}
+.onda-gravacao--2 {
+  animation-delay: 0.8s;
+}
+
+/* Barrinhas de áudio. */
+@keyframes barra {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.barras-audio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+}
+.barras-audio span {
+  display: block;
+  width: 4px;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(#22d3ee, #3b82f6);
+  transform-origin: center;
+  animation: barra 0.9s ease-in-out infinite;
+}
+
+/* "Cérebro" da IA durante a análise. */
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pulsar {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+.orbe-ia {
+  position: relative;
+  width: 7rem;
+  height: 7rem;
+}
+.orbe-ia__anel {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, #3b82f6, #22d3ee, #2dd4bf, transparent 70%, #3b82f6);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  animation: girar 1.4s linear infinite;
+}
+.orbe-ia__nucleo {
+  position: absolute;
+  inset: 1.25rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #67e8f9, #3b82f6 55%, #1e3a8a);
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.45);
+  animation: pulsar 1.8s ease-in-out infinite;
+}
+
+/* Gráfico: as linhas "se desenham" e as áreas aparecem em seguida. */
+@keyframes desenhar {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.grafico-linha {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: desenhar 1.3s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.grafico-linha--atraso {
+  animation-delay: 0.25s;
+}
+.grafico-area {
+  opacity: 0;
+  animation: trocar-tela 0.9s ease-out 0.7s forwards;
+}
+
+.menu-celular {
+  animation: aparecer 0.25s ease-out both;
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.aviso {
+  animation: subir 0.25s ease-out both;
+}
+
+/* Quem pede menos movimento no sistema não vê as animações. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
