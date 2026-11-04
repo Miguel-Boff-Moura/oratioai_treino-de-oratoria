@@ -478,22 +478,36 @@ export default function OratioAI() {
         e dicas personalizadas em segundos.
       </p>
       <div className="aparecer mt-12 flex flex-col justify-center gap-4 sm:flex-row" style={{ animationDelay: "240ms" }}>
-        <button
-          type="button"
-          onClick={() => ir("voz")}
-          className="group flex items-center justify-center gap-2 rounded-2xl bg-azul px-8 py-4 font-display text-sm text-white shadow-lg shadow-blue-900/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4F8DFD] hover:shadow-xl hover:shadow-blue-500/30 active:translate-y-0"
-        >
-          <Mic size={18} className="transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
-          Analisar Oratória
-        </button>
-        <button
-          type="button"
-          onClick={() => ir("texto")}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-azul px-8 py-4 font-display text-sm text-white shadow-lg shadow-blue-900/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4F8DFD] hover:shadow-xl hover:shadow-blue-500/30 active:translate-y-0"
-        >
-          <FileText size={18} aria-hidden="true" />
-          Analisar Apresentação
-        </button>
+        {/* Melhoria da Matriz de Feedback: cada botão ganhou uma explicação curta,
+            porque um usuário não entendeu a diferença entre as duas opções. */}
+        <div className="flex flex-col items-center gap-2 sm:w-[19rem]">
+          <button
+            type="button"
+            onClick={() => ir("voz")}
+            aria-describedby="explica-oratoria"
+            className="group flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-azul px-6 py-4 font-display text-sm text-white shadow-lg shadow-blue-900/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4F8DFD] hover:shadow-xl hover:shadow-blue-500/30 active:translate-y-0"
+          >
+            <Mic size={18} className="transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
+            Analisar Oratória
+          </button>
+          <p id="explica-oratoria" className="text-xs leading-relaxed text-gray-400">
+            Fale no microfone e a IA analisa sua voz: ritmo, vícios e clareza.
+          </p>
+        </div>
+        <div className="flex flex-col items-center gap-2 sm:w-[19rem]">
+          <button
+            type="button"
+            onClick={() => ir("texto")}
+            aria-describedby="explica-apresentacao"
+            className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-azul px-6 py-4 font-display text-sm text-white shadow-lg shadow-blue-900/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4F8DFD] hover:shadow-xl hover:shadow-blue-500/30 active:translate-y-0"
+          >
+            <FileText size={18} aria-hidden="true" />
+            Analisar Apresentação
+          </button>
+          <p id="explica-apresentacao" className="text-xs leading-relaxed text-gray-400">
+            Cole o texto que você vai apresentar e a IA revisa antes de você falar.
+          </p>
+        </div>
       </div>
     </section>
   );
